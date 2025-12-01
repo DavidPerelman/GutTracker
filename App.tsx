@@ -1,13 +1,19 @@
-import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { View, Text, StyleSheet, I18nManager } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { initDatabase } from "./src/database/database";
+import ReportScreen from "./src/screens/ReportScreen";
+
+I18nManager.allowRTL(true);
+I18nManager.forceRTL(true);
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   const [isDbInitialized, setIsDbInitialized] = useState(false);
 
   useEffect(() => {
-    // זה ירוץ פעם אחת כשהאפליקציה נטענת
     const setupDatabase = async () => {
       try {
         await initDatabase();
@@ -19,9 +25,8 @@ export default function App() {
     };
 
     setupDatabase();
-  }, []); // [] = רק פעם אחת
+  }, []);
 
-  // אם הדאטאבייס עדיין נטען...
   if (!isDbInitialized) {
     return (
       <View style={styles.container}>
@@ -30,12 +35,16 @@ export default function App() {
     );
   }
 
-  // אחרי שהדאטאבייס מוכן
   return (
-    <View style={styles.container}>
-      <Text>GutTracker - בקרוב!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="Report"
+          component={ReportScreen}
+          options={{ title: "דיווח יומי" }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 

@@ -3,12 +3,19 @@ import { SymptomReport } from "../models/SymptomReport";
 
 const DATABASE_NAME = "guttracker.db";
 
+// Singleton - דאטאבייס אחד בלבד
+let dbInstance: SQLite.SQLiteDatabase | null = null;
+
 /**
- * פותח/יוצר את בסיס הנתונים
+ * פותח/יוצר את בסיס הנתונים (Singleton)
  */
 export const openDatabase = async (): Promise<SQLite.SQLiteDatabase> => {
-  const db = await SQLite.openDatabaseAsync(DATABASE_NAME);
-  return db;
+  if (dbInstance) {
+    return dbInstance;
+  }
+
+  dbInstance = await SQLite.openDatabaseAsync(DATABASE_NAME);
+  return dbInstance;
 };
 
 /**
@@ -51,49 +58,6 @@ export const initDatabase = async (): Promise<void> => {
 };
 
 /**
- * יוצר דיווח תסמינים חדש
- */
-export const createReport = async (report: SymptomReport): Promise<void> => {
-  const db = await openDatabase();
-
-  // SQL להכנסת דיווח
-  await db.runAsync(
-    `INSERT INTO symptom_reports (
-      id, user_id, reported_at,
-      bloating, constipation, pain,
-      stool_frequency, stool_quality,
-      appetite, stress_level, water_cups,
-      meals_since_last_report, physical_activity_since_last_report,
-      sleep_hours, sleep_reported_today,
-      notes,
-      created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      report.id,
-      report.userId,
-      report.reportedAt.toISOString(),
-      report.bloating,
-      report.constipation,
-      report.pain,
-      report.stoolFrequency,
-      report.stoolQuality ?? null,
-      report.appetite,
-      report.stressLevel,
-      report.waterCups,
-      report.mealsSinceLastReport ?? null,
-      report.physicalActivitySinceLastReport ?? null,
-      report.sleepHours ?? null,
-      report.sleepReportedToday ? 1 : 0, // boolean → 0/1
-      report.notes ?? null,
-      report.createdAt.toISOString(),
-      report.updatedAt.toISOString(),
-    ]
-  );
-
-  console.log("✅ Report created:", report.id);
-};
-
-/**
  * ממיר שורה מ-SQLite למבנה SymptomReport
  */
 const rowToReport = (row: any): SymptomReport => {
@@ -127,6 +91,48 @@ const rowToReport = (row: any): SymptomReport => {
 };
 
 /**
+ * יוצר דיווח תסמינים חדש
+ */
+export const createReport = async (report: SymptomReport): Promise<void> => {
+  const db = await openDatabase();
+
+  const result = await db.runAsync(
+    `INSERT INTO symptom_reports (
+      id, user_id, reported_at,
+      bloating, constipation, pain,
+      stool_frequency, stool_quality,
+      appetite, stress_level, water_cups,
+      meals_since_last_report, physical_activity_since_last_report,
+      sleep_hours, sleep_reported_today,
+      notes,
+      created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      report.id,
+      report.userId,
+      report.reportedAt.toISOString(),
+      report.bloating,
+      report.constipation,
+      report.pain,
+      report.stoolFrequency,
+      report.stoolQuality ?? null,
+      report.appetite,
+      report.stressLevel,
+      report.waterCups,
+      report.mealsSinceLastReport ?? null,
+      report.physicalActivitySinceLastReport ?? null,
+      report.sleepHours ?? null,
+      report.sleepReportedToday ? 1 : 0,
+      report.notes ?? null,
+      report.createdAt.toISOString(),
+      report.updatedAt.toISOString(),
+    ]
+  );
+
+  console.log("✅ Report created:", report.id, result);
+};
+
+/**
  * מחזיר את כל הדיווחים של משתמש
  */
 export const getAllReports = async (
@@ -141,7 +147,6 @@ export const getAllReports = async (
     [userId]
   );
 
-  // המרת כל השורות למבנה SymptomReport
   return result.map(rowToReport);
 };
 
@@ -158,7 +163,6 @@ export const getReportById = async (
     [reportId]
   );
 
-  // אם לא נמצא - מחזיר null
   if (!result) {
     return null;
   }
@@ -208,7 +212,7 @@ export const updateReport = async (report: SymptomReport): Promise<void> => {
       report.sleepReportedToday ? 1 : 0,
       report.notes ?? null,
       report.updatedAt.toISOString(),
-      report.id, // ← WHERE id = ?
+      report.id,
     ]
   );
 
