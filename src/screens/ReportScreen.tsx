@@ -5,11 +5,13 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Platform,
   TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Slider from "@react-native-community/slider";
+import { createReport, getAllReports } from "../database/database";
+import { SymptomReport } from "../models/SymptomReport";
+import uuid from "react-native-uuid";
 
 export default function ReportScreen() {
   //   State לכל התסמינים
@@ -28,7 +30,7 @@ export default function ReportScreen() {
 
   // שינה
   const [reportedSleepToday, setReportedSleepToday] = useState(false); // האם כבר דווח היום
-  const [sleepHours, setSleepHours] = useState(7); // slider 0-12
+  const [sleepHours, setSleepHours] = useState(0); // slider 0-12
 
   // תזונה ופעילות
   const [hadMeals, setHadMeals] = useState(false); // האם אכל
@@ -38,6 +40,86 @@ export default function ReportScreen() {
 
   // הערות
   const [notes, setNotes] = useState("");
+
+  const handleSaveReport = async () => {
+    try {
+      // בניית אובייקט הדיווח
+      const report: SymptomReport = {
+        id: uuid.v4() as string,
+        userId: "user1", // כרגע משתמש קבוע
+        reportedAt: new Date(),
+
+        // תסמינים
+        bloating,
+        constipation,
+        pain,
+
+        // יציאות
+        stoolFrequency: hadStool ? 1 : 0, // אם היתה יציאה = 1, אחרת = 0
+        stoolQuality: hadStool ? stoolQuality : undefined,
+
+        // מדדים כלליים
+        appetite,
+        stressLevel,
+        waterCups,
+
+        // תזונה ופעילות
+        mealsSinceLastReport: hadMeals ? meals : undefined,
+        physicalActivitySinceLastReport: hadActivity ? activity : undefined,
+
+        // שינה
+        sleepHours: reportedSleepToday ? undefined : sleepHours,
+        sleepReportedToday: !reportedSleepToday, // אם דיווחנו עכשיו = true
+
+        // הערות
+        notes: notes.trim() || undefined,
+
+        // מטא-דאטה
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      // שמירה לדאטאבייס
+      await createReport(report);
+
+      // הודעת הצלחה
+      alert("הדיווח נשמר בהצלחה! ✅");
+
+      // איפוס הטופס (אופציונלי)
+      resetForm();
+    } catch (error) {
+      console.error("Error saving report:", error);
+      alert("שגיאה בשמירת הדיווח ❌");
+    }
+  };
+
+  const resetForm = () => {
+    setBloating(0);
+    setConstipation(0);
+    setPain(0);
+    setHadStool(false);
+    setStoolQuality(0);
+    setAppetite(0);
+    setStressLevel(0);
+    setWaterCups(0);
+    setSleepHours(0);
+    setReportedSleepToday(false);
+    setHadMeals(false);
+    setMeals("");
+    setHadActivity(false);
+    setActivity("");
+    setNotes("");
+  };
+
+  const showAllReports = async () => {
+    try {
+      const reports = await getAllReports("user1");
+      console.log("📊 כל הדיווחים:", reports);
+      alert(`יש ${reports.length} דיווחים במערכת!\n\nראה את ה-console לפרטים`);
+    } catch (error) {
+      console.error("Error fetching reports:", error);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -339,6 +421,16 @@ export default function ReportScreen() {
           />
         </View>
 
+        {/* כפתור שמירה */}
+        <TouchableOpacity style={styles.saveButton} onPress={handleSaveReport}>
+          <Text style={styles.saveButtonText}>שמור דיווח 💾</Text>
+        </TouchableOpacity>
+
+        {/* כפתור בדיקה זמני */}
+        <TouchableOpacity style={styles.debugButton} onPress={showAllReports}>
+          <Text style={styles.debugButtonText}>🔍 הצג כל הדיווחים (debug)</Text>
+        </TouchableOpacity>
+
         {/* רווח בתחתית */}
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -436,5 +528,34 @@ const styles = StyleSheet.create({
   rtlContainer: {
     flexDirection: "row-reverse",
     justifyContent: "flex-start",
+  },
+  saveButton: {
+    backgroundColor: "#4CAF50",
+    padding: 18,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 30,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  debugButton: {
+    backgroundColor: "#9E9E9E",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  debugButtonText: {
+    color: "#fff",
+    fontSize: 14,
   },
 });
