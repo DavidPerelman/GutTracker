@@ -92,3 +92,55 @@ export const createReport = async (report: SymptomReport): Promise<void> => {
 
   console.log("✅ Report created:", report.id);
 };
+
+/**
+ * ממיר שורה מ-SQLite למבנה SymptomReport
+ */
+const rowToReport = (row: any): SymptomReport => {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    reportedAt: new Date(row.reported_at),
+
+    bloating: row.bloating,
+    constipation: row.constipation,
+    pain: row.pain,
+
+    stoolFrequency: row.stool_frequency,
+    stoolQuality: row.stool_quality,
+
+    appetite: row.appetite,
+    stressLevel: row.stress_level,
+    waterCups: row.water_cups,
+
+    mealsSinceLastReport: row.meals_since_last_report,
+    physicalActivitySinceLastReport: row.physical_activity_since_last_report,
+
+    sleepHours: row.sleep_hours,
+    sleepReportedToday: row.sleep_reported_today === 1,
+
+    notes: row.notes,
+
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
+  };
+};
+
+/**
+ * מחזיר את כל הדיווחים של משתמש
+ */
+export const getAllReports = async (
+  userId: string
+): Promise<SymptomReport[]> => {
+  const db = await openDatabase();
+
+  const result = await db.getAllAsync(
+    `SELECT * FROM symptom_reports 
+     WHERE user_id = ? 
+     ORDER BY reported_at DESC`,
+    [userId]
+  );
+
+  // המרת כל השורות למבנה SymptomReport
+  return result.map(rowToReport);
+};
