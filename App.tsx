@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, I18nManager } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { initDatabase } from "./src/database/database";
 import ReportScreen from "./src/screens/ReportScreen";
+
+I18nManager.allowRTL(true);
+I18nManager.forceRTL(true);
 
 const Stack = createNativeStackNavigator();
 
