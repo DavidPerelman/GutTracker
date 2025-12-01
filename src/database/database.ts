@@ -144,3 +144,84 @@ export const getAllReports = async (
   // המרת כל השורות למבנה SymptomReport
   return result.map(rowToReport);
 };
+
+/**
+ * מחזיר דיווח בודד לפי ID
+ */
+export const getReportById = async (
+  reportId: string
+): Promise<SymptomReport | null> => {
+  const db = await openDatabase();
+
+  const result = await db.getFirstAsync(
+    `SELECT * FROM symptom_reports WHERE id = ?`,
+    [reportId]
+  );
+
+  // אם לא נמצא - מחזיר null
+  if (!result) {
+    return null;
+  }
+
+  return rowToReport(result);
+};
+
+/**
+ * מעדכן דיווח קיים
+ */
+export const updateReport = async (report: SymptomReport): Promise<void> => {
+  const db = await openDatabase();
+
+  await db.runAsync(
+    `UPDATE symptom_reports SET
+      user_id = ?,
+      reported_at = ?,
+      bloating = ?,
+      constipation = ?,
+      pain = ?,
+      stool_frequency = ?,
+      stool_quality = ?,
+      appetite = ?,
+      stress_level = ?,
+      water_cups = ?,
+      meals_since_last_report = ?,
+      physical_activity_since_last_report = ?,
+      sleep_hours = ?,
+      sleep_reported_today = ?,
+      notes = ?,
+      updated_at = ?
+    WHERE id = ?`,
+    [
+      report.userId,
+      report.reportedAt.toISOString(),
+      report.bloating,
+      report.constipation,
+      report.pain,
+      report.stoolFrequency,
+      report.stoolQuality ?? null,
+      report.appetite,
+      report.stressLevel,
+      report.waterCups,
+      report.mealsSinceLastReport ?? null,
+      report.physicalActivitySinceLastReport ?? null,
+      report.sleepHours ?? null,
+      report.sleepReportedToday ? 1 : 0,
+      report.notes ?? null,
+      report.updatedAt.toISOString(),
+      report.id, // ← WHERE id = ?
+    ]
+  );
+
+  console.log("✅ Report updated:", report.id);
+};
+
+/**
+ * מוחק דיווח לפי ID
+ */
+export const deleteReport = async (reportId: string): Promise<void> => {
+  const db = await openDatabase();
+
+  await db.runAsync(`DELETE FROM symptom_reports WHERE id = ?`, [reportId]);
+
+  console.log("✅ Report deleted:", reportId);
+};
