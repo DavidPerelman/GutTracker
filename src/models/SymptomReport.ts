@@ -16,7 +16,7 @@ export interface SymptomReport {
 
   // יציאות
   stoolFrequency: number;
-  stoolQuality?: string;
+  stoolQuality?: number;
 
   // מדדים כלליים (חובה)
   appetite: number; // 1-10
