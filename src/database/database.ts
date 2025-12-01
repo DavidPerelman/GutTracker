@@ -1,4 +1,5 @@
 import * as SQLite from "expo-sqlite";
+import { SymptomReport } from "../models/SymptomReport";
 
 const DATABASE_NAME = "guttracker.db";
 
@@ -47,4 +48,47 @@ export const initDatabase = async (): Promise<void> => {
   `);
 
   console.log("✅ Database initialized successfully");
+};
+
+/**
+ * יוצר דיווח תסמינים חדש
+ */
+export const createReport = async (report: SymptomReport): Promise<void> => {
+  const db = await openDatabase();
+
+  // SQL להכנסת דיווח
+  await db.runAsync(
+    `INSERT INTO symptom_reports (
+      id, user_id, reported_at,
+      bloating, constipation, pain,
+      stool_frequency, stool_quality,
+      appetite, stress_level, water_cups,
+      meals_since_last_report, physical_activity_since_last_report,
+      sleep_hours, sleep_reported_today,
+      notes,
+      created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      report.id,
+      report.userId,
+      report.reportedAt.toISOString(),
+      report.bloating,
+      report.constipation,
+      report.pain,
+      report.stoolFrequency,
+      report.stoolQuality ?? null,
+      report.appetite,
+      report.stressLevel,
+      report.waterCups,
+      report.mealsSinceLastReport ?? null,
+      report.physicalActivitySinceLastReport ?? null,
+      report.sleepHours ?? null,
+      report.sleepReportedToday ? 1 : 0, // boolean → 0/1
+      report.notes ?? null,
+      report.createdAt.toISOString(),
+      report.updatedAt.toISOString(),
+    ]
+  );
+
+  console.log("✅ Report created:", report.id);
 };
