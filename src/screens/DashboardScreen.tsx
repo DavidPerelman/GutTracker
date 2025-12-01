@@ -6,19 +6,30 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getAllReports, deleteReport } from "../database/database";
 import { SymptomReport } from "../models/SymptomReport";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function DashboardScreen() {
   const [reports, setReports] = useState<SymptomReport[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadReports();
+    setRefreshing(false);
+  };
 
   // טעינת דיווחים כשהמסך נטען
-  useEffect(() => {
-    loadReports();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      loadReports();
+    }, [])
+  );
 
   const loadReports = async () => {
     try {
@@ -128,6 +139,13 @@ export default function DashboardScreen() {
           renderItem={renderReport}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#007AFF"
+            />
+          }
         />
       )}
     </SafeAreaView>
