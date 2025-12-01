@@ -9,9 +9,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Slider from "@react-native-community/slider";
-import { createReport, getAllReports } from "../database/database";
+import { createReport } from "../database/database";
 import { SymptomReport } from "../models/SymptomReport";
 import uuid from "react-native-uuid";
+import { useNavigation } from "@react-navigation/native";
 
 export default function ReportScreen() {
   //   State לכל התסמינים
@@ -40,6 +41,7 @@ export default function ReportScreen() {
 
   // הערות
   const [notes, setNotes] = useState("");
+  const navigation = useNavigation();
 
   const handleSaveReport = async () => {
     try {
@@ -87,6 +89,8 @@ export default function ReportScreen() {
 
       // איפוס הטופס (אופציונלי)
       resetForm();
+
+      navigation.navigate("Dashboard" as never);
     } catch (error) {
       console.error("Error saving report:", error);
       alert("שגיאה בשמירת הדיווח ❌");
@@ -109,16 +113,6 @@ export default function ReportScreen() {
     setHadActivity(false);
     setActivity("");
     setNotes("");
-  };
-
-  const showAllReports = async () => {
-    try {
-      const reports = await getAllReports("user1");
-      console.log("📊 כל הדיווחים:", reports);
-      alert(`יש ${reports.length} דיווחים במערכת!\n\nראה את ה-console לפרטים`);
-    } catch (error) {
-      console.error("Error fetching reports:", error);
-    }
   };
 
   return (
@@ -426,11 +420,6 @@ export default function ReportScreen() {
           <Text style={styles.saveButtonText}>שמור דיווח 💾</Text>
         </TouchableOpacity>
 
-        {/* כפתור בדיקה זמני */}
-        <TouchableOpacity style={styles.debugButton} onPress={showAllReports}>
-          <Text style={styles.debugButtonText}>🔍 הצג כל הדיווחים (debug)</Text>
-        </TouchableOpacity>
-
         {/* רווח בתחתית */}
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -546,16 +535,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
-  },
-  debugButton: {
-    backgroundColor: "#9E9E9E",
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  debugButtonText: {
-    color: "#fff",
-    fontSize: 14,
   },
 });
