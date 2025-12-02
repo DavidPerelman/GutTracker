@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { initDatabase } from "./src/database/database";
 import ReportScreen from "./src/screens/ReportScreen";
 import DashboardScreen from "./src/screens/DashboardScreen";
+import AnalyticsScreen from "./src/screens/AnalyticsScreen";
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
@@ -42,6 +43,15 @@ function AppNavigator() {
           title: "דשבורד",
           tabBarLabel: "דשבורד",
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>📊</Text>,
+        }}
+      />
+      <Tab.Screen
+        name="Analytics"
+        component={AnalyticsScreen}
+        options={{
+          title: "ניתוח וגרפים",
+          tabBarLabel: "ניתוח",
+          tabBarIcon: ({ color }) => <Text style={{ fontSize: 24 }}>📈</Text>,
         }}
       />
       <Tab.Screen
